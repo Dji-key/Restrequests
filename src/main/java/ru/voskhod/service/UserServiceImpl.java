@@ -1,7 +1,5 @@
 package ru.voskhod.service;
 
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -23,10 +21,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
-
-    private final String URL = "https://reqres.in/api/users";
-    private final int TIMEOUT = 5 * 1000;
-    private final CloseableHttpClient HTTP_CLIENT = HttpClients.createDefault();
 
     private UserDaoImpl userDao;
     private UserJsonParser parser;
@@ -78,18 +72,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserPageDto getPage(int page) {
-        try {
-            return downloadPage(page);
-        } catch (IOException e) {
-            Page<User> usersPage = userDao.findAll(page);
-            List<User> users = usersPage.get().collect(Collectors.toList());
-            return new UserPageDto()
-                    .setPage(page).setPerPage(6)
-                    .setTotal(usersPage.getTotalElements())
-                    .setTotalPages(usersPage.getTotalPages())
-                    .setUsers(users.stream()
-                            .map(mapper::toDto)
-                            .collect(Collectors.toList()));
-        }
+        Page<User> usersPage = userDao.findAll(page);
+        List<User> users = usersPage.get().collect(Collectors.toList());
+        return new UserPageDto()
+                .setPage(page).setPerPage(6)
+                .setTotal(usersPage.getTotalElements())
+                .setTotalPages(usersPage.getTotalPages())
+                .setUsers(users.stream()
+                        .map(mapper::toDto)
+                        .collect(Collectors.toList()));
+
     }
 }

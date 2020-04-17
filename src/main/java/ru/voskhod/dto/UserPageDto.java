@@ -18,7 +18,6 @@ public class UserPageDto {
     @JsonProperty("total_pages")
     private int totalPages;
 
-//    @JsonProperty("data")
     private List<UserDto> users;
 
     public int getPage() {
