@@ -1,12 +1,16 @@
 package ru.voskhod.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import ru.voskhod.controller.MainController;
 import ru.voskhod.dao.UserDaoImpl;
 import ru.voskhod.dto.UserDto;
 import ru.voskhod.dto.UserPageDto;
 import ru.voskhod.entity.User;
+import ru.voskhod.exception.NoSuchUserException;
 import ru.voskhod.util.NetworkRequester;
 import ru.voskhod.util.UserJsonParser;
 import ru.voskhod.util.UserMapper;
@@ -21,6 +25,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final Logger logger = LogManager.getLogger(MainController.class);
 
     private UserDaoImpl userDao;
     private UserJsonParser parser;
@@ -37,12 +43,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserPageDto downloadPage(int page) throws IOException {
+        logger.info("Download page from http://reqres.in");
 
         String pageJson = networkRequester.requestPage(page);
         UserPageDto pageDto = parser.parsePage(pageJson);
-        Consumer<UserDto> downloadAvatars = (userDto) -> {
-            userDto.setImage(networkRequester.requestBase64Image(userDto.getAvatar()));
-        };
+        Consumer<UserDto> downloadAvatars = (userDto) -> userDto.setImage(networkRequester.requestBase64Image(userDto.getAvatar()));
 
         pageDto.getUsers().parallelStream().forEach(downloadAvatars);
         Map<Long, UserDto> remoteUsers = new HashMap<>();
@@ -72,6 +77,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserPageDto getPage(int page) {
+        logger.info("Request page from database");
+
         Page<User> usersPage = userDao.findAll(page);
         List<User> users = usersPage.get().collect(Collectors.toList());
         return new UserPageDto()
@@ -82,5 +89,26 @@ public class UserServiceImpl implements UserService {
                         .map(mapper::toDto)
                         .collect(Collectors.toList()));
 
+    }
+
+    @Override
+    public UserDto downloadUser(Long id) throws IOException, NoSuchUserException {
+        logger.info("Download user from http://reqres.in");
+
+        String userJson = networkRequester.requestUser(id);
+        UserDto userDto = parser.parseEntity(userJson);
+        userDto.setImage(networkRequester.requestBase64Image(userDto.getAvatar()));
+        User foundUser = userDao.findById(id);
+        if (!userDto.equalsToEntity(foundUser)) {
+            userDao.save(mapper.toEntity(userDto));
+        }
+        return userDto;
+    }
+
+    @Override
+    public UserDto getUser(Long id) throws NoSuchUserException {
+        logger.info("Request user from database");
+
+        return mapper.toDto(userDao.findById(id));
     }
 }

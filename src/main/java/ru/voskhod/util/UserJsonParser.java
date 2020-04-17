@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
+import ru.voskhod.dto.UserDto;
 import ru.voskhod.dto.UserPageDto;
 import ru.voskhod.entity.User;
 
@@ -17,8 +18,8 @@ public class UserJsonParser {
         return mapper.readValue(s, UserPageDto.class);
     }
 
-    public User parseEntity(String array) throws JsonProcessingException {
+    public UserDto parseEntity(String array) throws JsonProcessingException {
         final JsonNode jsonNode = mapper.readTree(array);
-        return mapper.readValue(jsonNode.path("data").toString(), User.class);
+        return mapper.readValue(jsonNode.path("data").toString(), UserDto.class);
     }
 }

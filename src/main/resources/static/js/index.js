@@ -1,11 +1,13 @@
-var app = new Vue({
+let app = new Vue({
     el: '#app',
     data: {
+        pageInfo: {},
         page: 1,
         code: 0,
-        users: []
+        users: [],
+        currentUser: {}
     },
-    created() {
+    mounted() {
         this.loadUsersPage(1);
     },
     methods: {
@@ -28,6 +30,12 @@ var app = new Vue({
             $.get('/users?page=' + this.page, function (data, textStatus, xhr) {
                 app.pageInfo = data;
                 app.users = app.pageInfo.users;
+                app.code = xhr.status;
+            });
+        },
+        details: function (id) {
+            $.get('/users/' + id, function (data, textStatus, xhr) {
+                app.currentUser = data;
                 app.code = xhr.status;
             });
         }

@@ -3,6 +3,8 @@ package ru.voskhod.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
+import java.util.Arrays;
+import java.util.Objects;
 
 @Entity
 public class User {
@@ -68,5 +70,24 @@ public class User {
     public User setImage(byte[] image) {
         this.image = image;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id) &&
+                Objects.equals(email, user.email) &&
+                Objects.equals(firstName, user.firstName) &&
+                Objects.equals(lastName, user.lastName) &&
+                Arrays.equals(image, user.image);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(id, email, firstName, lastName);
+        result = 31 * result + Arrays.hashCode(image);
+        return result;
     }
 }
